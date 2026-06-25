@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root{
+    --navy:#0b2447;
+    --navy2:#13355e;
+    --gold:#c9a24b;
+    --gold-light:#e7cf8e;
+    --cream:#faf7f0;
+    --ink:#1c2430;
+    --muted:#6b7686;
+    --line:#e4e2da;
+    --danger:#c0392b;
+    --good:#2e7d4f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--cream);color:var(--ink);}
+  .wrap{max-width:720px;margin:0 auto;padding:0 0 60px;}
+  .hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,#0b2447 100%);
+    color:#fff;padding:42px 28px 36px;text-align:center;position:relative;overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 20% 20%, rgba(201,162,75,0.18), transparent 45%),
+               radial-gradient(circle at 85% 80%, rgba(201,162,75,0.14), transparent 50%);
+  }
+  .hero-inner{position:relative;z-index:1;}
+  .crown{font-size:26px;letter-spacing:6px;color:var(--gold-light);margin-bottom:8px;}
+  .hero h1{
+    font-size:26px;letter-spacing:2px;margin:0 0 6px;font-weight:700;
+    text-transform:uppercase;
+  }
+  .hero .accent{color:var(--gold-light);}
+  .hero p.tag{font-size:15px;color:var(--gold-light);font-weight:600;margin:0 0 18px;letter-spacing:0.5px;}
+  .hero hr{border:none;border-top:1px solid rgba(255,255,255,0.18);width:60px;margin:14px auto;}
+  .hero .desc{font-size:13.5px;line-height:1.7;color:#dfe6f2;max-width:560px;margin:0 auto;}
+  .card{background:#fff;border-radius:14px;box-shadow:0 2px 14px rgba(11,36,71,0.06);margin:-22px 20px 20px;position:relative;z-index:2;padding:20px 22px;border:1px solid var(--line);}
+  .guide-title{font-weight:700;font-size:14.5px;color:var(--navy);margin:0 0 10px;display:flex;align-items:center;gap:6px;}
+  .guide ul{margin:0;padding-left:18px;}
+  .guide li{font-size:13px;line-height:1.65;color:var(--muted);margin-bottom:5px;}
+  .section{background:#fff;margin:20px 20px 0;border-radius:14px;border:1px solid var(--line);padding:22px 22px 24px;box-shadow:0 1px 6px rgba(11,36,71,0.04);}
+  .qlabel{font-weight:700;font-size:14.5px;color:var(--navy);margin-bottom:4px;}
+  .qsub{font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+  .qnum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:11.5px;font-weight:700;margin-right:8px;flex-shrink:0;}
+  .qhead{display:flex;align-items:flex-start;}
+  input[type=text], input[type=tel], textarea, select{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14px;font-family:inherit;
+    background:#fcfcfa;color:var(--ink);transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=tel]:focus, textarea:focus, select:focus{
+    outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,75,0.18);background:#fff;
+  }
+  textarea{resize:vertical;min-height:90px;line-height:1.5;}
+  select{appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%236b7686" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>');background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer;}
+  .opt-grid{display:flex;flex-direction:column;gap:8px;}
+  .opt-row{
+    display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;
+    cursor:pointer;transition:border-color .15s, background .15s;
+  }
+  .opt-row:hover{border-color:var(--gold-light);background:#fffdf7;}
+  .opt-row.checked{border-color:var(--gold);background:#fcf6e8;}
+  .opt-row input{accent-color:var(--navy);width:16px;height:16px;flex-shrink:0;}
+  .opt-row span{font-size:14px;}
+  .opt-row .emoji{font-size:16px;}
+  .other-input{margin-top:6px;}
+  .req{color:var(--danger);font-size:12px;margin-left:3px;}
+  .footer-actions{margin:26px 20px 0;text-align:center;}
+  .btn-submit{
+    background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border:none;border-radius:30px;
+    padding:14px 38px;font-size:15.5px;font-weight:700;letter-spacing:0.5px;cursor:pointer;box-shadow:0 6px 18px rgba(11,36,71,0.25);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(11,36,71,0.32);}
+  .btn-submit:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+  .errmsg{color:var(--danger);font-size:12.5px;margin-top:6px;display:none;}
+  .toast{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;
+    border-radius:30px;font-size:13.5px;box-shadow:0 6px 18px rgba(0,0,0,0.2);opacity:0;pointer-events:none;transition:opacity .25s, bottom .25s;z-index:50;
+  }
+  .toast.show{opacity:1;bottom:28px;}
+  .thanks{
+    background:#fff;margin:20px 20px 0;border-radius:14px;border:1px solid var(--line);padding:46px 28px;text-align:center;
+  }
+  .thanks .check{
+    width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--good),#3f9c6a);display:flex;align-items:center;
+    justify-content:center;color:#fff;font-size:30px;margin:0 auto 18px;
+  }
+  .thanks h2{color:var(--navy);font-size:19px;margin:0 0 10px;}
+  .thanks p{color:var(--muted);font-size:13.5px;line-height:1.7;max-width:440px;margin:0 auto 22px;}
+  .btn-secondary{
+    background:#fff;color:var(--navy);border:1.5px solid var(--navy);border-radius:30px;padding:11px 26px;font-size:14px;
+    font-weight:600;cursor:pointer;
+  }
+  .btn-secondary:hover{background:#f4f6fa;}
+  .gm-link{display:block;text-align:center;margin-top:16px;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;background:none;border:none;}
+  .reveal{animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .gm-panel{background:#fff;margin:20px 20px 0;border-radius:14px;border:1px solid var(--line);padding:20px;}
+  .gm-entry{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .gm-entry .meta{font-size:11.5px;color:var(--muted);margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap;}
+  .tag{background:#f1f0ea;border-radius:20px;padding:2px 10px;font-size:11px;color:var(--navy2);font-weight:600;}
+  .gm-entry .body-text{font-size:13.5px;line-height:1.6;white-space:pre-wrap;margin:4px 0;}
+  .gm-entry .lbl{font-size:11.5px;font-weight:700;color:var(--navy);margin-top:8px;}
+  .passgate{text-align:center;padding:10px 0;}
+  .passgate input{max-width:200px;margin:0 auto 10px;text-align:center;}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:-2px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:20px 0;}
+  .config-warning{background:#fff3cd;border:1px solid #f0d27a;border-radius:10px;padding:12px 16px;margin:16px 20px 0;font-size:12.5px;color:#7a5b00;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="crown">✦</div>
+      <h1>Voice of <span class="accent">Aston</span> Cirebon</h1>
+      <p class="tag">Every Voice Makes Us Better</p>
+      <hr>
+      <div class="desc">
+        Di Aston Cirebon, kami percaya bahwa ide terbaik sering datang dari orang-orang yang menjalankan pekerjaan setiap hari.
+        Kami mengundang seluruh tim untuk menyampaikan ide, usulan perbaikan, maupun masukan yang dapat membantu kita menjadi hotel yang lebih baik.
+        Tidak ada ide yang terlalu kecil — formulir ini dibaca langsung oleh Owner dan General Manager.
+      </div>
+    </div>
+  </div>
+
+  <div id="configWarning" class="config-warning" style="display:none;">
+    ⚠️ <b>Firebase belum dikonfigurasi.</b> Buka kode artifact ini, cari bagian <code>firebaseConfig</code> di tag &lt;script&gt; paling bawah, dan isi dengan konfigurasi project Firebase Anda.
+  </div>
+
+  <div class="card guide">
+    <div class="guide-title">📌 Panduan Pengisian</div>
+    <ul>
+      <li>Sampaikan masukan dengan tujuan membangun dan membantu Aston Cirebon menjadi lebih baik.</li>
+      <li>Jelaskan kondisi atau situasi yang Anda temui secara spesifik.</li>
+      <li>Jika memungkinkan, sertakan usulan solusi atau langkah perbaikannya.</li>
+      <li>Anda bebas memilih untuk tetap anonim.</li>
+      <li>Seluruh masukan akan dibaca oleh Owner dan General Manager.</li>
+      <li>Masukan yang disampaikan secara profesional tidak akan memengaruhi penilaian kinerja maupun kesempatan berkarier.</li>
+      <li>Apabila terdapat kondisi yang membutuhkan penanganan segera (misalnya keselamatan tamu/karyawan), mohon segera laporkan kepada atasan atau departemen terkait.</li>
+    </ul>
+  </div>
+
+  <form id="vForm">
+    <!-- Q1 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">1</span><div><div class="qlabel">Nama <span style="color:var(--muted);font-weight:500;">(Opsional)</span></div></div></div>
+      <input type="text" id="q1_nama" placeholder="Tulis nama Anda, atau kosongkan untuk anonim">
+    </div>
+
+    <!-- Q2 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">2</span><div><div class="qlabel">Departemen <span style="color:var(--muted);font-weight:500;">(Opsional)</span></div></div></div>
+      <select id="q2_dept">
+        <option value="">— Pilih departemen —</option>
+        <option>Front Office</option>
+        <option>Housekeeping</option>
+        <option>F&B Service</option>
+        <option>Kitchen</option>
+        <option>Engineering</option>
+        <option>Sales & Marketing</option>
+        <option>Finance</option>
+        <option>Human Resources</option>
+        <option>Security</option>
+        <option>IT</option>
+        <option>Accounting</option>
+        <option>General Administration</option>
+        <option>Lainnya</option>
+      </select>
+    </div>
+
+    <!-- Q3 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">3</span><div><div class="qlabel">Jenis Masukan <span class="req">*</span></div></div></div>
+      <div class="opt-grid" id="q3_group">
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="💡 Ide Baru"><span class="emoji">💡</span><span>Ide Baru</span></label>
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="🔧 Usulan Perbaikan"><span class="emoji">🔧</span><span>Usulan Perbaikan</span></label>
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="⚙️ Efisiensi Operasional"><span class="emoji">⚙️</span><span>Efisiensi Operasional</span></label>
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="😊 Peningkatan Pengalaman Tamu"><span class="emoji">😊</span><span>Peningkatan Pengalaman Tamu</span></label>
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="👏 Apresiasi untuk Rekan Kerja"><span class="emoji">👏</span><span>Apresiasi untuk Rekan Kerja</span></label>
+        <label class="opt-row" data-name="jenis"><input type="radio" name="jenis" value="📝 Lainnya"><span class="emoji">📝</span><span>Lainnya</span></label>
+      </div>
+      <div class="errmsg" id="err_q3">Mohon pilih salah satu jenis masukan.</div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">4</span><div><div class="qlabel">Silakan sampaikan ide atau masukan Anda. <span class="req">*</span></div>
+      <div class="qsub">Ceritakan selengkap mungkin mengenai kondisi yang Anda temui, ide yang ingin disampaikan, atau peluang perbaikan yang menurut Anda dapat membuat Aston Cirebon menjadi lebih baik. Semakin detail informasi yang diberikan, semakin mudah bagi kami untuk memahami dan menindaklanjutinya.</div></div></div>
+      <textarea id="q4_masukan" rows="5" placeholder="Tulis masukan Anda di sini..."></textarea>
+      <div class="errmsg" id="err_q4">Mohon isi bagian ini terlebih dahulu.</div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">5</span><div><div class="qlabel">Menurut Anda, langkah konkret apa yang dapat dilakukan?</div>
+      <div class="qsub">Anda tidak harus memiliki solusi yang sempurna. Namun apabila memiliki usulan, kami sangat menghargainya.</div></div></div>
+      <textarea id="q5_langkah" rows="4" placeholder="Tulis usulan langkah perbaikan (opsional)..."></textarea>
+    </div>
+
+    <!-- Q6 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">6</span><div><div class="qlabel">Menurut Anda, dampak yang diharapkan dari usulan ini adalah...</div></div></div>
+      <div class="opt-grid" id="q6_group">
+        <label class="opt-row"><input type="checkbox" value="Meningkatkan kepuasan tamu"><span>Meningkatkan kepuasan tamu</span></label>
+        <label class="opt-row"><input type="checkbox" value="Meningkatkan efisiensi kerja"><span>Meningkatkan efisiensi kerja</span></label>
+        <label class="opt-row"><input type="checkbox" value="Menghemat biaya operasional"><span>Menghemat biaya operasional</span></label>
+        <label class="opt-row"><input type="checkbox" value="Meningkatkan keselamatan kerja"><span>Meningkatkan keselamatan kerja</span></label>
+        <label class="opt-row"><input type="checkbox" value="Meningkatkan kerja sama tim"><span>Meningkatkan kerja sama tim</span></label>
+        <label class="opt-row"><input type="checkbox" value="Meningkatkan kualitas pelayanan"><span>Meningkatkan kualitas pelayanan</span></label>
+        <label class="opt-row" id="q6_other_row"><input type="checkbox" id="q6_other_chk" value="Lainnya"><span>Lainnya:</span></label>
+      </div>
+      <input type="text" id="q6_other_text" class="other-input" placeholder="Sebutkan dampak lainnya..." style="display:none;">
+    </div>
+
+    <!-- Q7 -->
+    <div class="section">
+      <div class="qhead"><span class="qnum">7</span><div><div class="qlabel">Apakah kami boleh menghubungi Anda apabila diperlukan klarifikasi lebih lanjut? <span class="req">*</span></div></div></div>
+      <div class="opt-grid">
+        <label class="opt-row" data-name="contact"><input type="radio" name="contact" value="ya" id="q7_ya"><span>Ya</span></label>
+        <label class="opt-row" data-name="contact"><input type="radio" name="contact" value="tidak" id="q7_tidak"><span>Tidak, saya ingin tetap anonim</span></label>
+      </div>
+      <div class="errmsg" id="err_q7">Mohon pilih salah satu opsi.</div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="section" id="q8_section" style="display:none;">
+      <div class="qhead"><span class="qnum">8</span><div><div class="qlabel">Bagaimana cara terbaik menghubungi Anda? <span style="color:var(--muted);font-weight:500;">(Opsional)</span></div>
+      <div class="qsub">Nama / Nomor WhatsApp / Email</div></div></div>
+      <input type="text" id="q8_kontak" placeholder="Contoh: 0812-xxxx-xxxx atau email@contoh.com">
+    </div>
+
+    <div class="footer-actions">
+      <button type="submit" class="btn-submit" id="btnSubmit">Kirim Masukan</button>
+    </div>
+  </form>
+
+  <div class="thanks reveal" id="thanksPanel" style="display:none;">
+    <div class="check">✓</div>
+    <h2>Terima Kasih!</h2>
+    <p>Terima kasih telah meluangkan waktu untuk berbagi masukan. Setiap ide, usulan, maupun masukan merupakan kontribusi yang sangat berarti bagi perkembangan Aston Cirebon. Walaupun tidak semua usulan dapat langsung diterapkan, kami berkomitmen untuk membaca dan mempertimbangkan setiap masukan secara serius.</p>
+    <button class="btn-secondary" id="btnAgain">Kirim Masukan Lain</button>
+  </div>
+
+  <button class="gm-link" id="gmToggle">Akses Owner / General Manager →</button>
+
+  <div class="gm-panel" id="gmPanel" style="display:none;">
+    <div id="gmGate" class="passgate">
+      <div class="qlabel" style="text-align:center;">Masukkan kode akses</div>
+      <input type="text" id="gmPass" placeholder="Kode akses">
+      <div><button class="btn-secondary" id="gmUnlock">Buka</button></div>
+      <div class="errmsg" id="err_pass" style="text-align:center;">Kode salah.</div>
+    </div>
+    <div id="gmContent" style="display:none;">
+      <div class="qlabel" style="margin-bottom:14px;">📋 Seluruh Masukan Karyawan</div>
+      <div id="gmList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK (compat, no build tools needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* =========================================================
+   1) ISI KONFIGURASI FIREBASE ANDA DI SINI
+   Dapatkan dari: Firebase Console > Project Settings > Your apps > Web app
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAJD1NUF8fXIj5Lz5L9iKfv8CwqqJwwJZ4",
+  authDomain: "voice-of-aston.firebaseapp.com",
+  projectId: "voice-of-aston",
+  storageBucket: "voice-of-aston.firebasestorage.app",
+  messagingSenderId: "270187692891",
+  appId: "1:270187692891:web:670476af804ae91c73107e"
+};
+
+let db;
+try{
+  if(firebaseConfig.apiKey.includes('GANTI_DENGAN')){
+    document.getElementById('configWarning').style.display = 'block';
+  } else {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  }
+}catch(e){ console.error('Firebase init error:', e); }
+
+/* ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+document.querySelectorAll('.opt-row input').forEach(inp=>{
+  inp.addEventListener('change', ()=>{
+    if(inp.type === 'radio'){
+      document.querySelectorAll('.opt-row[data-name="'+inp.name+'"]').forEach(r=>r.classList.remove('checked'));
+      inp.closest('.opt-row').classList.add('checked');
+    } else {
+      inp.closest('.opt-row').classList.toggle('checked', inp.checked);
+    }
+  });
+});
+
+$('q6_other_chk').addEventListener('change', (e)=>{
+  $('q6_other_text').style.display = e.target.checked ? 'block':'none';
+});
+
+$('q7_ya').addEventListener('change', ()=>{ $('q8_section').style.display='block'; });
+$('q7_tidak').addEventListener('change', ()=>{ $('q8_section').style.display='none'; $('q8_kontak').value=''; });
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+$('vForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+
+  if(!db){ showToast('Firebase belum dikonfigurasi. Lihat peringatan di atas.'); return; }
+
+  let valid = true;
+  const jenis = document.querySelector('input[name="jenis"]:checked');
+  $('err_q3').style.display = jenis ? 'none' : 'block';
+  if(!jenis) valid = false;
+
+  const masukan = $('q4_masukan').value.trim();
+  $('err_q4').style.display = masukan ? 'none' : 'block';
+  if(!masukan) valid = false;
+
+  const contact = document.querySelector('input[name="contact"]:checked');
+  $('err_q7').style.display = contact ? 'none' : 'block';
+  if(!contact) valid = false;
+
+  if(!valid){ showToast('Mohon lengkapi bagian yang wajib diisi.'); return; }
+
+  const dampak = Array.from(document.querySelectorAll('#q6_group input[type=checkbox]:checked'))
+    .map(c => c.value === 'Lainnya' && $('q6_other_text').value.trim()
+      ? 'Lainnya: ' + $('q6_other_text').value.trim()
+      : c.value);
+
+  const btn = $('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Mengirim...';
+
+  try{
+    await db.collection('feedback').add({
+      nama: $('q1_nama').value.trim() || '(Anonim)',
+      departemen: $('q2_dept').value || '(Tidak diisi)',
+      jenis: jenis.value,
+      masukan: masukan,
+      langkahKonkret: $('q5_langkah').value.trim() || '(Tidak diisi)',
+      dampak: dampak,
+      bolehDihubungi: contact.value,
+      kontak: contact.value === 'ya' ? ($('q8_kontak').value.trim() || '(Tidak diisi)') : null,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    $('vForm').style.display = 'none';
+    $('thanksPanel').style.display = 'block';
+  } catch(err){
+    console.error(err);
+    showToast('Terjadi kesalahan saat mengirim. Silakan coba lagi.');
+    btn.disabled = false;
+    btn.innerHTML = 'Kirim Masukan';
+  }
+});
+
+$('btnAgain').addEventListener('click', ()=>{
+  $('vForm').reset();
+  document.querySelectorAll('.opt-row').forEach(r=>r.classList.remove('checked'));
+  $('q6_other_text').style.display='none';
+  $('q8_section').style.display='none';
+  $('thanksPanel').style.display='none';
+  $('vForm').style.display='block';
+  const btn = $('btnSubmit');
+  btn.disabled = false;
+  btn.innerHTML = 'Kirim Masukan';
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+// GM panel
+const ACCESS_CODE = 'ASTON2026';
+$('gmToggle').addEventListener('click', ()=>{
+  const panel = $('gmPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if(panel.style.display === 'block') panel.scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+$('gmUnlock').addEventListener('click', async ()=>{
+  if($('gmPass').value.trim().toUpperCase() === ACCESS_CODE){
+    $('err_pass').style.display = 'none';
+    $('gmGate').style.display = 'none';
+    $('gmContent').style.display = 'block';
+    await loadEntries();
+  } else {
+    $('err_pass').style.display = 'block';
+  }
+});
+
+async function loadEntries(){
+  if(!db){ $('gmList').innerHTML = '<div class="empty-state">Firebase belum dikonfigurasi.</div>'; return; }
+  $('gmList').innerHTML = '<div class="empty-state">Memuat masukan...</div>';
+  try{
+    const snap = await db.collection('feedback').orderBy('submittedAt', 'desc').get();
+    if(snap.empty){
+      $('gmList').innerHTML = '<div class="empty-state">Belum ada masukan yang masuk.</div>';
+      return;
+    }
+    const rows = [];
+    snap.forEach(doc=>{
+      const en = doc.data();
+      const date = en.submittedAt && en.submittedAt.toDate ? en.submittedAt.toDate().toLocaleString('id-ID') : '';
+      rows.push(`
+        <div class="gm-entry">
+          <div class="meta">
+            <span class="tag">${escapeHtml(en.jenis || '')}</span>
+            <span class="tag">${escapeHtml(en.departemen || '')}</span>
+            <span>${escapeHtml(en.nama || '(Anonim)')}</span>
+            <span>· ${date}</span>
+          </div>
+          <div class="lbl">Masukan</div>
+          <div class="body-text">${escapeHtml(en.masukan || '')}</div>
+          ${en.langkahKonkret && en.langkahKonkret !== '(Tidak diisi)' ? `<div class="lbl">Langkah Konkret</div><div class="body-text">${escapeHtml(en.langkahKonkret)}</div>` : ''}
+          ${en.dampak && en.dampak.length ? `<div class="lbl">Dampak yang diharapkan</div><div class="body-text">${en.dampak.map(escapeHtml).join(', ')}</div>` : ''}
+          <div class="lbl">Boleh dihubungi?</div>
+          <div class="body-text">${en.bolehDihubungi === 'ya' ? 'Ya — ' + escapeHtml(en.kontak || '') : 'Tidak (anonim)'}</div>
+        </div>
+      `);
+    });
+    $('gmList').innerHTML = rows.join('');
+  } catch(err){
+    console.error(err);
+    $('gmList').innerHTML = '<div class="empty-state">Gagal memuat data. Coba lagi.</div>';
+  }
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
