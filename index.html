@@ -249,14 +249,42 @@
   <button class="gm-link" id="gmToggle">Akses Owner / General Manager →</button>
 
   <div class="gm-panel" id="gmPanel" style="display:none;">
-    <div id="gmGate" class="passgate">
-      <div class="qlabel" style="text-align:center;">Masukkan kode akses</div>
-      <input type="text" id="gmPass" placeholder="Kode akses">
-      <div><button class="btn-secondary" id="gmUnlock">Buka</button></div>
-      <div class="errmsg" id="err_pass" style="text-align:center;">Kode salah.</div>
+
+    <!-- Login -->
+    <div id="gmLogin" class="passgate">
+      <div class="qlabel" style="text-align:center;margin-bottom:4px;">🔐 Login Owner / General Manager</div>
+      <div class="qsub" style="text-align:center;margin-bottom:16px;">Khusus untuk Director dan General Manager Aston Cirebon.</div>
+      <input type="text" id="gmEmail" placeholder="Email" autocomplete="username" style="margin-bottom:10px;">
+      <input type="password" id="gmPassword" placeholder="Password" autocomplete="current-password" style="margin-bottom:4px;">
+      <div><button class="btn-secondary" id="gmLoginBtn" type="button">Masuk</button></div>
+      <div class="errmsg" id="err_login" style="text-align:center;"></div>
     </div>
+
+    <!-- Change password -->
+    <div id="gmChangePass" style="display:none;max-width:320px;margin:0 auto;">
+      <div class="qlabel" style="margin-bottom:6px;text-align:center;">🔑 Ganti Password</div>
+      <div class="qsub" style="text-align:center;">Demi keamanan, sebaiknya ganti password default Anda sekarang.</div>
+      <input type="password" id="cpOld" placeholder="Password saat ini" autocomplete="current-password" style="margin-bottom:10px;">
+      <input type="password" id="cpNew" placeholder="Password baru (min. 8 karakter)" autocomplete="new-password" style="margin-bottom:10px;">
+      <input type="password" id="cpConfirm" placeholder="Konfirmasi password baru" autocomplete="new-password" style="margin-bottom:10px;">
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn-secondary" id="cpSubmit" type="button">Simpan Password Baru</button>
+        <button class="btn-secondary" id="cpSkip" type="button" style="border-color:var(--muted);color:var(--muted);">Lewati</button>
+      </div>
+      <div class="errmsg" id="err_cp" style="text-align:center;"></div>
+      <div class="errmsg" id="ok_cp" style="display:none;color:var(--good);text-align:center;"></div>
+    </div>
+
+    <!-- Content -->
     <div id="gmContent" style="display:none;">
-      <div class="qlabel" style="margin-bottom:14px;">📋 Seluruh Masukan Karyawan</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+        <div class="qlabel" style="margin-bottom:0;">📋 Seluruh Masukan Karyawan</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" id="gmShowChangePass" type="button" style="font-size:12px;padding:8px 14px;">Ganti Password</button>
+          <button class="btn-secondary" id="gmLogout" type="button" style="font-size:12px;padding:8px 14px;border-color:var(--danger);color:var(--danger);">Keluar</button>
+        </div>
+      </div>
+      <div id="loggedInAs" style="font-size:11.5px;color:var(--muted);margin-bottom:16px;"></div>
       <div id="gmList"></div>
     </div>
   </div>
@@ -267,6 +295,7 @@
 <!-- Firebase SDK (compat, no build tools needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
 /* =========================================================
@@ -282,17 +311,19 @@ const firebaseConfig = {
   appId: "1:270187692891:web:670476af804ae91c73107e"
 };
 
-let db;
+let db, auth;
 try{
   if(firebaseConfig.apiKey.includes('GANTI_DENGAN')){
     document.getElementById('configWarning').style.display = 'block';
   } else {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    auth = firebase.auth();
   }
 }catch(e){ console.error('Firebase init error:', e); }
 
-/* ========================================================= */
+// Hanya 2 email ini yang diizinkan mengakses panel GM/Owner
+const ALLOWED_EMAILS = ['director@astoncirebon.com', 'gm@astoncirebon.com'];
 
 const $ = (id) => document.getElementById(id);
 
@@ -386,23 +417,126 @@ $('btnAgain').addEventListener('click', ()=>{
   window.scrollTo({top:0, behavior:'smooth'});
 });
 
-// GM panel
-const ACCESS_CODE = 'ASTON2026';
+// ===== GM / Owner panel toggle =====
 $('gmToggle').addEventListener('click', ()=>{
   const panel = $('gmPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
   if(panel.style.display === 'block') panel.scrollIntoView({behavior:'smooth', block:'start'});
 });
 
-$('gmUnlock').addEventListener('click', async ()=>{
-  if($('gmPass').value.trim().toUpperCase() === ACCESS_CODE){
-    $('err_pass').style.display = 'none';
-    $('gmGate').style.display = 'none';
-    $('gmContent').style.display = 'block';
-    await loadEntries();
-  } else {
-    $('err_pass').style.display = 'block';
+// ===== Login =====
+$('gmLoginBtn').addEventListener('click', async ()=>{
+  const email = $('gmEmail').value.trim().toLowerCase();
+  const pass = $('gmPassword').value;
+  const errEl = $('err_login');
+  errEl.style.display = 'none';
+
+  if(!auth){ errEl.textContent = 'Firebase belum dikonfigurasi.'; errEl.style.display='block'; return; }
+  if(!email || !pass){ errEl.textContent = 'Mohon isi email dan password.'; errEl.style.display='block'; return; }
+  if(!ALLOWED_EMAILS.includes(email)){ errEl.textContent = 'Email ini tidak memiliki akses.'; errEl.style.display='block'; return; }
+
+  const btn = $('gmLoginBtn');
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+    $('gmPassword').value = '';
+  } catch(err){
+    console.error(err);
+    errEl.textContent = 'Email atau password salah.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Masuk';
   }
+});
+
+$('gmPassword').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') $('gmLoginBtn').click(); });
+
+// ===== Auth state =====
+if(auth){
+  auth.onAuthStateChanged(user=>{
+    if(user && ALLOWED_EMAILS.includes((user.email||'').toLowerCase())){
+      $('gmLogin').style.display = 'none';
+      $('gmChangePass').style.display = 'none';
+      $('gmContent').style.display = 'block';
+      $('loggedInAs').textContent = 'Masuk sebagai: ' + user.email;
+      loadEntries();
+    } else if(user){
+      // Email tidak terdaftar di daftar yang diizinkan
+      auth.signOut();
+    } else {
+      $('gmContent').style.display = 'none';
+      $('gmChangePass').style.display = 'none';
+      $('gmLogin').style.display = 'block';
+    }
+  });
+}
+
+// ===== Change password =====
+$('gmShowChangePass').addEventListener('click', ()=>{
+  $('gmContent').style.display = 'none';
+  $('gmChangePass').style.display = 'block';
+  $('err_cp').style.display = 'none';
+  $('ok_cp').style.display = 'none';
+});
+
+$('cpSkip').addEventListener('click', ()=>{
+  $('gmChangePass').style.display = 'none';
+  $('gmContent').style.display = 'block';
+});
+
+$('cpSubmit').addEventListener('click', async ()=>{
+  const oldPass = $('cpOld').value;
+  const newPass = $('cpNew').value;
+  const confirmPass = $('cpConfirm').value;
+  const errEl = $('err_cp');
+  const okEl = $('ok_cp');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if(!oldPass || !newPass || !confirmPass){
+    errEl.textContent = 'Mohon lengkapi semua kolom.'; errEl.style.display='block'; return;
+  }
+  if(newPass.length < 8){
+    errEl.textContent = 'Password baru minimal 8 karakter.'; errEl.style.display='block'; return;
+  }
+  if(newPass !== confirmPass){
+    errEl.textContent = 'Konfirmasi password tidak cocok.'; errEl.style.display='block'; return;
+  }
+
+  const user = auth.currentUser;
+  if(!user){ errEl.textContent = 'Sesi login tidak ditemukan. Silakan login ulang.'; errEl.style.display='block'; return; }
+
+  const btn = $('cpSubmit');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try{
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, oldPass);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(newPass);
+    okEl.textContent = 'Password berhasil diubah!';
+    okEl.style.display = 'block';
+    $('cpOld').value=''; $('cpNew').value=''; $('cpConfirm').value='';
+    setTimeout(()=>{
+      $('gmChangePass').style.display = 'none';
+      $('gmContent').style.display = 'block';
+    }, 1300);
+  } catch(err){
+    console.error(err);
+    if(err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
+      errEl.textContent = 'Password saat ini salah.';
+    } else if(err.code === 'auth/too-many-requests'){
+      errEl.textContent = 'Terlalu banyak percobaan. Coba lagi nanti.';
+    } else {
+      errEl.textContent = 'Gagal mengubah password. Coba lagi.';
+    }
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan Password Baru';
+  }
+});
+
+// ===== Logout =====
+$('gmLogout').addEventListener('click', ()=>{
+  if(auth) auth.signOut();
 });
 
 async function loadEntries(){
