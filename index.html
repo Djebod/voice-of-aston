@@ -337,7 +337,8 @@
     <div id="gmContent" style="display:none;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
         <div class="qlabel" style="margin-bottom:0;">📋 Seluruh Masukan Karyawan</div>
-        <div style="display:flex;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="gmExport" type="button" style="font-size:12px;padding:8px 14px;">📥 Export ke Excel</button>
           <button class="btn-secondary" id="gmShowChangePass" type="button" style="font-size:12px;padding:8px 14px;">Ganti Password</button>
           <button class="btn-secondary" id="gmLogout" type="button" style="font-size:12px;padding:8px 14px;border-color:var(--danger);color:var(--danger);">Keluar</button>
         </div>
@@ -363,6 +364,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
 /* =========================================================
@@ -742,6 +744,44 @@ function escapeHtml(str){
   div.textContent = str;
   return div.innerHTML;
 }
+
+// ===== Export ke Excel =====
+function exportToExcel(){
+  if(!allEntries.length){ showToast('Tidak ada data untuk diekspor.'); return; }
+
+  const dataToExport = currentFilter === 'all'
+    ? allEntries
+    : allEntries.filter(en => (en.status || 'Belum Ditinjau') === currentFilter);
+
+  if(!dataToExport.length){ showToast('Tidak ada data pada filter ini.'); return; }
+
+  const rows = dataToExport.map(en => ({
+    'Waktu': en.submittedAt && en.submittedAt.toDate ? en.submittedAt.toDate().toLocaleString('id-ID') : '',
+    'Nama': en.nama || '(Anonim)',
+    'Departemen': en.departemen || '(Tidak diisi)',
+    'Jenis Masukan': en.jenis || '',
+    'Isi Masukan': en.masukan || '',
+    'Langkah Konkret': en.langkahKonkret || '',
+    'Dampak yang Diharapkan': (en.dampak || []).join(', '),
+    'Boleh Dihubungi': en.bolehDihubungi === 'ya' ? 'Ya' : 'Tidak',
+    'Kontak': en.kontak || '',
+    'Status': en.status || 'Belum Ditinjau'
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:18},{wch:18},{wch:16},{wch:22},{wch:45},{wch:35},{wch:30},{wch:14},{wch:20},{wch:16}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Masukan Karyawan');
+
+  const filterLabel = currentFilter === 'all' ? 'Semua' : currentFilter.replace(/\s+/g, '-');
+  const filename = `Voice-of-Aston-Cirebon_${filterLabel}_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
+
+$('gmExport').addEventListener('click', exportToExcel);
 </script>
 </body>
 </html>
